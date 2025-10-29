@@ -1,0 +1,10 @@
+bin/
+obj/
+/packages/
+riderModule.iml
+/_ReSharper.Caches/
+/infra/.env
+/infra/devcerts/overflow.local.key
+/infra/devcerts/overflow.local.crt
+/infra/do/*
+.idea
