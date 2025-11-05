@@ -28,7 +28,8 @@ namespace QuestionService.Data.Migrations
                     ViewCount = table.Column<int>(type: "integer", nullable: false),
                     TagSlugs = table.Column<List<string>>(type: "text[]", nullable: false),
                     HasAcceptedAnswer = table.Column<bool>(type: "boolean", nullable: false),
-                    Votes = table.Column<int>(type: "integer", nullable: false)
+                    Votes = table.Column<int>(type: "integer", nullable: false),
+                    AnswerCount = table.Column<int>(type: "integer", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -49,6 +50,30 @@ namespace QuestionService.Data.Migrations
                     table.PrimaryKey("PK_Tags", x => x.Id);
                 });
 
+            migrationBuilder.CreateTable(
+                name: "Answers",
+                columns: table => new
+                {
+                    Id = table.Column<string>(type: "character varying(36)", maxLength: 36, nullable: false),
+                    Content = table.Column<string>(type: "character varying(5000)", maxLength: 5000, nullable: false),
+                    UserId = table.Column<string>(type: "character varying(36)", maxLength: 36, nullable: false),
+                    UserDisplayName = table.Column<string>(type: "character varying(300)", maxLength: 300, nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    Accepted = table.Column<bool>(type: "boolean", nullable: false),
+                    QuestionId = table.Column<string>(type: "character varying(36)", maxLength: 36, nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Answers", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Answers_Questions_QuestionId",
+                        column: x => x.QuestionId,
+                        principalTable: "Questions",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
             migrationBuilder.InsertData(
                 table: "Tags",
                 columns: new[] { "Id", "Description", "Name", "Slug" },
@@ -65,16 +90,24 @@ namespace QuestionService.Data.Migrations
                     { "typescript", "A statically typed superset of JavaScript that compiles to clean JavaScript. Helps build large-scale apps with tooling support.", "TypeScript", "typescript" },
                     { "wolverine", "A high-performance messaging and command-handling framework for .NET with built-in support for Mediator, queues, retries, and durable messaging.", "Wolverine", "wolverine" }
                 });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Answers_QuestionId",
+                table: "Answers",
+                column: "QuestionId");
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
-                name: "Questions");
+                name: "Answers");
 
             migrationBuilder.DropTable(
                 name: "Tags");
+
+            migrationBuilder.DropTable(
+                name: "Questions");
         }
     }
 }
