@@ -13,5 +13,5 @@ public class Answer
     public DateTime? UpdatedAt { get; set; }
     public bool Accepted { get; set; }
     [MaxLength(36)] public required string QuestionId { get; set; }
-    [JsonIgnore] public Question Question { get; set; } = null;
+    [JsonIgnore] public Question Question { get; set; } = null!;
 }

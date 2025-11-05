@@ -5,7 +5,7 @@ using QuestionService.Models;
 
 namespace QuestionService.Controllers;
 
-[ApiController, Route("/tags"), Produces("application/json"), Tags("Tags")]
+[ApiController, Route("/api/v1/tags"), Produces("application/json"), Tags("Tags")]
 public class TagsController(QuestionDbContext context) : ControllerBase
 {
     [HttpGet("")]

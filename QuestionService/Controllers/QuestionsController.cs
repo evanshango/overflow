@@ -12,7 +12,7 @@ using Wolverine;
 
 namespace QuestionService.Controllers;
 
-[ApiController, Route("/questions"), Produces("application/json"), Tags("Questions")]
+[ApiController, Route("/api/v1/questions"), Produces("application/json"), Tags("Questions")]
 public class QuestionsController(
     QuestionDbContext context,
     TagService tagService,
@@ -210,5 +210,22 @@ public class QuestionsController(
         await bus.PublishAsync(new AnswerAccepted(question.Id));
 
         return NoContent();
+    }
+
+    [HttpGet("errors")]
+    public ActionResult GetErrorResponses(int code)
+    {
+        ModelState.AddModelError("Problem one", "Validation problem one");
+        ModelState.AddModelError("Problem two", "Validation problem two");
+        
+        return code switch
+        {
+            400 => BadRequest("Opposite of good request"),
+            401 => Unauthorized(),
+            403 => Forbid(),
+            404 => NotFound(),
+            500 => throw new Exception("This is a server error"),
+            _ => ValidationProblem(ModelState)
+        };
     }
 }
