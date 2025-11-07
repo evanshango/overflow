@@ -7,41 +7,36 @@ var compose = builder.AddDockerComposeEnvironment("production")
     .WithDashboard(dashboard => dashboard.WithHostPort(9090));
 
 var postgres = builder.AddPostgres("postgres-svc", port: 5431)
-    .WithDataVolume("postgres-data")
-    .WithPgAdmin();
-    // .WithEndpoint(5431, 5432, "postgres", isExternal: true);
+    .WithPgAdmin()
+    .WithDataVolume("postgres-data");
+    // .WithEndpoint(5431, 5432, "postgresql", isExternal: true);
 
-var postgresPassword = builder.Environment.IsDevelopment()
+var keycloakDatabase = postgres.AddDatabase("keycloak", "keycloak");
+
+var keycloakDatabaseUrl = builder.Environment.IsDevelopment()
+    ? $"jdbc:postgresql://postgres-svc/{keycloakDatabase.Resource.DatabaseName}?currentSchema=public"
+    : "${KEYCLOAK_DB_URL}";
+
+var keycloakDatabaseUsername = builder.Environment.IsDevelopment()
+    ? postgres.Resource.UserNameReference.ValueExpression
+    : "${KEYCLOAK_DB_USERNAME}";
+
+var keycloakDatabasePassword = builder.Environment.IsDevelopment()
     ? builder.Configuration["Parameters:postgres-svc-password"]
       ?? throw new InvalidOperationException("Could not get postgres db password")
     : "${POSTGRES_SVC_PASSWORD}";
 
-if (string.IsNullOrEmpty(postgresPassword))
-    throw new InvalidOperationException("Postgres DB Password found in config");
-
-var keycloakDb = postgres.AddDatabase("keycloak-db");
-
-var keycloakDbUrl = builder.Environment.IsDevelopment()
-    ? "jdbc:postgresql://postgres-svc/keycloak-db?currentSchema=public"
-    : "${KEYCLOAK_DB_URL}";
-
-var keycloakDbUser = builder.Environment.IsDevelopment()
-    ? "postgres"
-    : "${KEYCLOAK_DB_USERNAME}";
-
-var keycloakDbType = builder.Environment.IsDevelopment()
-    ? builder.Configuration["Parameters:keycloak-db-type"] ?? "postgres"
-    : "${KEYCLOAK_DB_TYPE}";
+var keycloakDbType = builder.Environment.IsDevelopment() ? "postgres" : "${KEYCLOAK_DB_TYPE}";
 
 var keycloak = builder.AddKeycloak("keycloak-svc", 6001)
-    // .WithDataVolume("keycloak-data")
-    .WaitFor(keycloakDb)
+    .WaitFor(keycloakDatabase)
     .WithEnvironment("KC_HTTP_ENABLED", "true")
     .WithEnvironment("KC_HOSTNAME_STRICT", "false")
     .WithEnvironment("KC_DB", keycloakDbType)
-    .WithEnvironment("KC_DB_USERNAME", keycloakDbUser)
-    .WithEnvironment("KC_DB_PASSWORD", postgresPassword)
-    .WithEnvironment("KC_DB_URL", keycloakDbUrl)
+    .WithEnvironment("KC_DB_URL", keycloakDatabaseUrl)
+    .WithEnvironment("KC_PROXY_HEADERS", "xforwarded")
+    .WithEnvironment("KC_DB_USERNAME", keycloakDatabaseUsername)
+    .WithEnvironment("KC_DB_PASSWORD", keycloakDatabasePassword)
     .WithEnvironment("VIRTUAL_HOST", "id.overflow.local")
     .WithEnvironment("VIRTUAL_PORT", "8080");
 
@@ -50,9 +45,8 @@ var typesenseApiKey = builder.Environment.IsDevelopment()
       ?? throw new InvalidOperationException("Could not get typesense api key")
     : "${TYPESENSE_API_KEY}";
 
-var typesense = builder.AddContainer(
-        "typesense-svc", "typesense/typesense", "29.0"
-    )
+var typesense = builder.AddContainer("typesense-svc", "typesense/typesense")
+    .WithImageTag("29.0")
     .WithArgs("--data-dir", "/data", "--api-key", typesenseApiKey, "--enable-cors")
     .WithVolume("typesense-data", "/data")
     .WithEnvironment("TYPESENSE_API_KEY", typesenseApiKey)
@@ -60,7 +54,7 @@ var typesense = builder.AddContainer(
 
 var typesenseContainer = typesense.GetEndpoint("typesense");
 
-var questionDb = postgres.AddDatabase("question-db");
+var questionDatabase = postgres.AddDatabase("question");
 
 var rabbitMq = builder.AddRabbitMQ("rabbitmq-svc", port: 5673)
     .WithDataVolume("rabbitmq-data")
@@ -68,10 +62,10 @@ var rabbitMq = builder.AddRabbitMQ("rabbitmq-svc", port: 5673)
 
 var questionSvc = builder.AddProject<QuestionService>("question-svc")
     .WithReference(keycloak)
-    .WithReference(questionDb)
+    .WithReference(questionDatabase)
     .WithReference(rabbitMq)
     .WaitFor(keycloak)
-    .WaitFor(questionDb)
+    .WaitFor(questionDatabase)
     .WaitFor(rabbitMq);
 
 var searchSvc = builder.AddProject<SearchService>("search-svc")

@@ -17,7 +17,7 @@ builder.Services.AddScoped<TagService>();
 
 builder.Services.AddKeycloakAuthentication();
 
-builder.AddNpgsqlDbContext<QuestionDbContext>("question-db");
+builder.AddNpgsqlDbContext<QuestionDbContext>("question");
 
 await builder.UseWolverineWithRabbitMqAsync(opts =>
 {
