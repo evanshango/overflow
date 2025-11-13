@@ -1,24 +1,18 @@
 'use server'
 
 import {Question} from '@/lib/types';
+import {fetchClient} from '@/lib/fetchClient';
 
-export async function getQuestions(tag?: string): Promise<Question[]> {
-    let url = 'http://localhost:8002/api/v1/questions';
+export async function getQuestions(tag?: string) {
+    let url = '/api/v1/questions';
     if (tag) url += '?tag=' + tag;
-    
-    const response = await fetch(url)
-    
-    if (!response.ok) throw new Error('Failed to get data');
-    
-    return response.json();
+    return fetchClient<Question[]>(url, 'GET')
 }
 
-export async function getQuestionById(id: string): Promise<Question> {
-    const url = `http://localhost:8002/api/v1/questions/${id}`;
+export async function getQuestionById(id: string) {
+    return fetchClient<Question>(`/api/v1/questions/${id}`, 'GET');
+}
 
-    const response = await fetch(url)
-
-    if (!response.ok) throw new Error('Failed to get data');
-
-    return response.json();
+export async function searchQuestions(query: string) {
+    return fetchClient<Question[]>(`/api/v1/search?query=${query}`, 'GET')
 }
