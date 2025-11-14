@@ -1,9 +1,30 @@
 import ErrorButtons from '@/app/session/ErrorButtons';
+import AuthTestButton from '@/app/session/AuthTestButton';
+import {auth} from '@/auth';
+import {Snippet} from '@heroui/snippet';
 
-export default function SessionPage() {
+export default async function SessionPage() {
+    const session = await auth()
+    
     return (
-        <div>
-            <ErrorButtons/>
+        <div className="px-6">
+            <div className='text-center'>
+                <h3 className="text-3xl">Session Dashboard</h3>
+            </div>
+            <Snippet
+                symbol=''
+                color='primary'
+                classNames={{
+                    base: 'w-full mt-4',
+                    pre: 'text-wrap whitespace-pre-wrap break-all',
+                }}
+            >
+                {JSON.stringify(session, null, 2)}
+            </Snippet>
+            <div className='flex items-center justify-center gap-3 mt-6'>
+                <ErrorButtons/>
+                <AuthTestButton/>
+            </div>
         </div>
     );
 }

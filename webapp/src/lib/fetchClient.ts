@@ -1,4 +1,5 @@
 import {notFound} from 'next/navigation';
+import {auth} from '@/auth';
 
 export async function fetchClient<T>(
     url: string,
@@ -10,8 +11,11 @@ export async function fetchClient<T>(
 
     if (!apiURL) throw new Error('Missing API URL');
 
+    const session = await auth()
+
     const headers: HeadersInit = {
         'Content-Type': 'application/json',
+        ...(session?.accessToken ? {Authorization: `Bearer ${session.accessToken}`} : {}),
         ...(rest.headers || {})
     }
 
@@ -24,23 +28,33 @@ export async function fetchClient<T>(
 
     const contentType = response.headers.get('Content-type');
     const isJson = contentType?.includes('application/json')
-        || contentType?.includes('application/problem+json')
+        || contentType?.includes('application/problem+json');
     const parsed = isJson ? await response.json() : await response.text();
 
     if (!response.ok) {
         if (response.status === 404) return notFound();
         if (response.status === 500) throw new Error('Server error. Please try again later');
 
-        let message = ''
+        let message = '';
 
-        if (typeof parsed === 'string') {
-            message = parsed
-        } else if (parsed?.message) {
-            message = parsed?.message
+        if (response.status === 401) {
+            const authHeader = response.headers.get('WWW-Authenticate');
+            if (authHeader?.includes('error_description')) {
+                const match = authHeader?.match(/error_description="(.+?)"/);
+                if (match) message = match[1];
+            } else {
+                message = "You must be logged in to do that"
+            }
         }
-        
+
         if (!message) {
-            message = getFallbackMessage(response.status)
+            if (typeof parsed === 'string') {
+                message = parsed
+            } else if (parsed?.message) {
+                message = parsed?.message;
+            } else {
+                message = getFallbackMessage(response.status)
+            }
         }
 
         return {data: null, error: {message, status: response.status}}
@@ -53,8 +67,6 @@ function getFallbackMessage(status: number) {
     switch (status) {
         case 400:
             return 'Bad request. Please check your input.';
-        case 401:
-            return 'You must be signed in';
         case 403:
             return 'You do not have permission to access this resource';
         case 500:

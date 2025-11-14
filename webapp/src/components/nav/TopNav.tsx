@@ -1,10 +1,15 @@
 import Link from 'next/link';
 import {AcademicCapIcon} from '@heroicons/react/24/solid';
-import {Button} from '@heroui/button';
 import ThemeToggle from '@/components/nav/ThemeToggle';
 import SearchInput from '@/components/nav/SearchInput';
+import SigninButton from '@/components/nav/SigninButton';
+import {getCurrentUser} from '@/lib/actions/auth-actions';
+import UserMenu from '@/components/nav/UserMenu';
+import SignupButton from '@/components/nav/SignupButton';
 
-export default function TopNav() {
+export default async function TopNav() {
+    const user = await getCurrentUser();
+
     return (
         <header className='p-3 w-full fixed top-0 z-50 bg-white shadow-sm dark:bg-black'>
             <div className='flex px-10 mx-auto'>
@@ -22,10 +27,16 @@ export default function TopNav() {
                     </nav>
                 </div>
                 <SearchInput/>
-                <div className='flex basis-1/4 shrink-0 justify-end gap-3'>
+                <div className='flex basis-1/4 shrink-0 justify-end gap-3 items-center'>
                     <ThemeToggle/>
-                    <Button color='secondary' variant='bordered' className='rounded-full w-[20%]'>Signin</Button>
-                    <Button color='secondary' className='rounded-full w-[20%]'>Signup</Button>
+                    {user ? (
+                        <UserMenu user={user}/>
+                    ) : (
+                        <>
+                            <SigninButton/>
+                            <SignupButton/>
+                        </>
+                    )}
                 </div>
             </div>
         </header>

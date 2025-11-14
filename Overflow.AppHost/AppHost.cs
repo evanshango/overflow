@@ -9,7 +9,7 @@ var compose = builder.AddDockerComposeEnvironment("production")
 var postgres = builder.AddPostgres("postgres-svc", port: 5431)
     .WithPgAdmin()
     .WithDataVolume("postgres-data");
-    // .WithEndpoint(5431, 5432, "postgresql", isExternal: true);
+// .WithEndpoint(5431, 5432, "postgresql", isExternal: true);
 
 var keycloakDatabase = postgres.AddDatabase("keycloak", "keycloak");
 
@@ -80,6 +80,7 @@ var yarp = builder.AddYarp("gateway-svc")
     {
         yarpBuilder.AddRoute("/api/v1/questions/{**catch-all}", questionSvc);
         yarpBuilder.AddRoute("/api/v1/tags/{**catch-all}", questionSvc);
+        yarpBuilder.AddRoute("/api/v1/tests/{**catch-all}", questionSvc);
         yarpBuilder.AddRoute("/api/v1/search/{**catch-all}", searchSvc);
     })
     .WithEnvironment("ASPNETCORE_URLS", "http://*:8002")
