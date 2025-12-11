@@ -4,8 +4,8 @@ import {HeroUIProvider, ToastProvider} from '@heroui/react';
 import {ReactNode, useEffect} from 'react';
 import {useRouter} from 'next/navigation';
 import {ThemeProvider as NextThemesProvider} from 'next-themes';
-import {useTagStore} from '@/lib/useTagStore';
 import {getTags} from '@/lib/actions/tag-actions';
+import {useTagStore} from '@/lib/hooks/useTagStore';
 
 export default function Providers({children}: { children: ReactNode }) {
     const router = useRouter();
@@ -18,7 +18,7 @@ export default function Providers({children}: { children: ReactNode }) {
         }
         void loadTags();
     }, [setTags]);
-    
+
     return (
         <HeroUIProvider navigate={router.push} className='h-full flex flex-col'>
             <ToastProvider/>

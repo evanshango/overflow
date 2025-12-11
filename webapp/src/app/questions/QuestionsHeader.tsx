@@ -3,7 +3,7 @@
 import {Button} from '@heroui/button';
 import Link from 'next/link';
 import {Tab, Tabs} from '@heroui/tabs';
-import {useTagStore} from '@/lib/useTagStore';
+import {useTagStore} from '@/lib/hooks/useTagStore';
 
 type Props = {
     tag?: string;

@@ -13,8 +13,11 @@ export default function UserMenu({user}: Props) {
         <Dropdown>
             <DropdownTrigger>
                 <div className='flex items-center gap-2 cursor-pointer'>
-                    <Avatar color='secondary' size='sm' name={user.name?.charAt(0).toUpperCase()}/>
-                    {user.name}
+                    <Avatar color='secondary' size='md' name={user.name?.charAt(0).toUpperCase()} className='rounded-xl' />
+                    <div className='flex flex-col items-start'>
+                        <span className='font-bold text-sm'>{user.name}</span>
+                        <span className='font-extralight text-xs'>{user.email}</span>
+                    </div>
                 </div>
             </DropdownTrigger>
             <DropdownMenu>
